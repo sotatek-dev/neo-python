@@ -13,6 +13,7 @@ from time import sleep
 from logzero import logger
 from twisted.internet import reactor, task
 from neocore.UInt160 import UInt160
+from neocore.UInt256 import UInt256
 from neocore.Cryptography.Crypto import Crypto
 
 from neo.contrib.smartcontract import SmartContract
@@ -20,6 +21,7 @@ from neo.Network.NodeLeader import NodeLeader
 from neo.Core.Blockchain import Blockchain
 from neo.Implementations.Blockchains.LevelDB.LevelDBBlockchain import LevelDBBlockchain
 from neo.Settings import settings
+settings.setup_mainnet()
 import mysql.connector
 
 config = {
@@ -32,10 +34,11 @@ config = {
 
 cnx = mysql.connector.connect(**config)
 cursor = cnx.cursor()
-add_transfer = ("INSERT INTO transfer_event (fromAddress, toAddress, value) VALUES (%s, %s, %s)")
+add_transfer = ("INSERT INTO transfer_event (txid, from_address, to_address, value, success) VALUES (%s, %s, %s, %s, %s)")
+add_refund = ("INSERT INTO refund_event (txid, address, value, success) VALUES (%s, %s, %s, %s)")
 # If you want the log messages to also be saved in a logfile, enable the
 # next line. This configures a logfile with max 10 MB and 3 rotations:
-settings.set_logfile("/tmp/logfile.log", max_bytes=1e7, backup_count=3)
+settings.set_logfile(".log/cge-event.log", max_bytes=1e7, backup_count=3)
 
 # Setup the smart contract instance
 smart_contract = SmartContract("34579e4614ac1a7bd295372d3de8621770c76cdc")
@@ -54,14 +57,21 @@ def sc_notify(event):
     # you should know what data-type is in the bytes, and how to decode it. In this example,
     # it's just a string, so we decode it with utf-8:
     eventType = event.event_payload[0].decode("utf-8")
-    print(eventType == "transfer")
     if eventType == "transfer":
         from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
         to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
         value = int.from_bytes(event.event_payload[3], 'little')
-        data_transfer = (from_addr, to_addr, value)
+        data_transfer = (str(event.tx_hash), from_addr, to_addr, value, event.execution_success)
         cursor.execute(add_transfer, data_transfer)
         cnx.commit()
+        logger.info("[transfer]: %s %s %s %s %s", event.tx_hash, from_addr, to_addr, value, event.execution_success)
+    if eventType == "refund":
+        address = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
+        amount = event.event_payload[2]
+        data_refund = (str(event.tx_hash), address, str(amount), event.execution_success)
+        cursor.execute(add_refund, data_refund)
+        cnx.commit()
+        logger.info("[refund]: %s %s %s %s", event.tx_hash, address, amount, event.execution_success)
     logger.info("- payload part 1: %s", event.event_payload[0].decode("utf-8"))
 
 
