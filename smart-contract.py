@@ -58,8 +58,12 @@ def sc_notify(event):
     # it's just a string, so we decode it with utf-8:
     eventType = event.event_payload[0].decode("utf-8")
     if eventType == "transfer":
-        from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
-        to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
+        from_addr = "0000000000000000000000000000000000"
+        to_addr = "0000000000000000000000000000000000"
+        if event.event_payload[1].length > 0:
+            from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
+        if event.event_payload[2].length > 0:
+            to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
         value = int.from_bytes(event.event_payload[3], 'little')
         data_transfer = (str(event.tx_hash), from_addr, to_addr, value, event.execution_success)
         cursor.execute(add_transfer, data_transfer)
@@ -91,10 +95,7 @@ def main():
     # Setup the blockchain
     blockchain = LevelDBBlockchain(settings.chain_leveldb_path)
     Blockchain.RegisterBlockchain(blockchain)
-    try:
-        dbloop = task.LoopingCall(Blockchain.Default().PersistBlocks)
-    except Exception as e:
-        logger.info("Ignore error to continue: %s " % e)
+    dbloop = task.LoopingCall(Blockchain.Default().PersistBlocks)
     dbloop.start(.1)
     NodeLeader.Instance().Start()
 

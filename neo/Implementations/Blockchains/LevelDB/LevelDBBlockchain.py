@@ -814,8 +814,8 @@ class LevelDBBlockchain(Blockchain):
                 self.OnPersistCompleted(block)
                 del self._block_cache[hash]
             except Exception as e:
-                logger.info("Could not persist block %s " % e)
-                # raise e
+                logger.error("Could not persist block %s " % e)
+                raise e
 
     def Dispose(self):
         self._db.close()
