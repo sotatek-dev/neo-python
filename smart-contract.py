@@ -13,6 +13,7 @@ from time import sleep
 from logzero import logger
 from twisted.internet import reactor, task
 from neocore.UInt160 import UInt160
+from neocore.Cryptography.Crypto import Crypto
 
 from neo.contrib.smartcontract import SmartContract
 from neo.Network.NodeLeader import NodeLeader
@@ -53,9 +54,10 @@ def sc_notify(event):
     # you should know what data-type is in the bytes, and how to decode it. In this example,
     # it's just a string, so we decode it with utf-8:
     eventType = event.event_payload[0].decode("utf-8")
-    if eventType == "tranfer":
-        from_addr = UInt160(data=event.event_payload[1])
-        to_addr = UInt160(data=event.event_payload[2])
+    print(eventType == "transfer")
+    if eventType == "transfer":
+        from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
+        to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
         value = int.from_bytes(event.event_payload[3], 'little')
         data_transfer = (from_addr, to_addr, value)
         cursor.execute(add_transfer, data_transfer)
