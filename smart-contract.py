@@ -91,7 +91,10 @@ def main():
     # Setup the blockchain
     blockchain = LevelDBBlockchain(settings.chain_leveldb_path)
     Blockchain.RegisterBlockchain(blockchain)
-    dbloop = task.LoopingCall(Blockchain.Default().PersistBlocks)
+    try
+        dbloop = task.LoopingCall(Blockchain.Default().PersistBlocks)
+    except Exception as e:
+        logger.info("Ignore error to continue: %s " % e)
     dbloop.start(.1)
     NodeLeader.Instance().Start()
 
