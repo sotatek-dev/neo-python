@@ -60,11 +60,12 @@ def sc_notify(event):
     if eventType == "transfer":
         from_addr = "0000000000000000000000000000000000"
         to_addr = "0000000000000000000000000000000000"
+        value = event.event_payload[3]
         if len(event.event_payload[1]) > 0:
             from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
+            value = int.from_bytes(event.event_payload[3], 'little')
         if len(event.event_payload[2]) > 0:
             to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
-        value = event.event_payload[3]
         data_transfer = (str(event.tx_hash), from_addr, to_addr, str(value), event.execution_success)
         cursor.execute(add_transfer, data_transfer)
         cnx.commit()
