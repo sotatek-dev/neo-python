@@ -64,7 +64,7 @@ def sc_notify(event):
             from_addr = Crypto.ToAddress(UInt160(data=event.event_payload[1]))
         if len(event.event_payload[2]) > 0:
             to_addr = Crypto.ToAddress(UInt160(data=event.event_payload[2]))
-        value = int.from_bytes(event.event_payload[3], 'little')
+        value = event.event_payload[3]
         data_transfer = (str(event.tx_hash), from_addr, to_addr, value, event.execution_success)
         cursor.execute(add_transfer, data_transfer)
         cnx.commit()
@@ -76,7 +76,6 @@ def sc_notify(event):
         cursor.execute(add_refund, data_refund)
         cnx.commit()
         logger.info("[refund]: %s %s %s %s", event.tx_hash, address, amount, event.execution_success)
-    logger.info("- payload part 1: %s", event.event_payload[0].decode("utf-8"))
 
 
 def custom_background_code():
