@@ -34,8 +34,8 @@ config = {
 
 cnx = mysql.connector.connect(**config)
 cursor = cnx.cursor()
-add_transfer = ("INSERT INTO transfer_event (txid, from_address, to_address, value, success) VALUES (%s, %s, %s, %s, %s)")
-add_refund = ("INSERT INTO refund_event (txid, address, value, success) VALUES (%s, %s, %s, %s)")
+add_transfer = ("INSERT IGNORE INTO transfer_event (txid, from_address, to_address, value, success) VALUES (%s, %s, %s, %s, %s)")
+add_refund = ("INSERT IGNORE INTO refund_event (txid, address, value, success) VALUES (%s, %s, %s, %s)")
 # If you want the log messages to also be saved in a logfile, enable the
 # next line. This configures a logfile with max 10 MB and 3 rotations:
 settings.set_logfile(".log/cge-event.log", max_bytes=1e7, backup_count=3)
