@@ -36,6 +36,8 @@ class Blockchain(object):
 
     __blockrequests = set()
 
+    _paused = False
+
     BlockSearchTries = 0
 
     CACHELIM = 4000
@@ -177,6 +179,9 @@ class Blockchain(object):
             set:
         """
         return self.__blockrequests
+
+    def ResetBlockRequests(self):
+        self.__blockrequests = set()
 
     @staticmethod
     def CalculateBonusIgnoreClaimed(inputs, ignore_claimed=True):
@@ -448,6 +453,12 @@ class Blockchain(object):
 
     def BlockCacheCount(self):
         pass
+
+    def Pause(self):
+        self._paused = True
+
+    def Resume(self):
+        self._paused = False
 
     @staticmethod
     def RegisterBlockchain(blockchain):
